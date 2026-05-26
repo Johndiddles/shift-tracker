@@ -1,15 +1,33 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import "@/global.css";
+import { Stack } from "expo-router";
+import * as MediaLibrary from "expo-media-library";
+import { useEffect } from "react";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+export default function RootLayout() {
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    if (permissionResponse && !permissionResponse.granted && permissionResponse.canAskAgain) {
+      requestPermission();
+    }
+  }, [permissionResponse]);
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="add-shift"
+        options={{
+          presentation: 'modal',
+          title: 'Add / Edit Shift'
+        }}
+      />
+      <Stack.Screen
+        name="export"
+        options={{
+          presentation: 'modal',
+          title: 'Export Data'
+        }}
+      />
+    </Stack>
   );
 }
