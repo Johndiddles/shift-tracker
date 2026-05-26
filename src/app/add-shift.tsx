@@ -41,10 +41,17 @@ export default function AddShiftScreen() {
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   const distinctDates = useMemo(() => {
+    const s = new Date(startTime);
+    const e = new Date(endTime);
+    s.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+    e.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+    if (e < s) {
+      e.setDate(e.getDate() + 1);
+    }
     return Array.from(
-      new Set([format(startTime, "yyyy-MM-dd"), format(endTime, "yyyy-MM-dd")]),
+      new Set([format(s, "yyyy-MM-dd"), format(e, "yyyy-MM-dd")]),
     );
-  }, [startTime, endTime]);
+  }, [startTime, endTime, date]);
 
   useEffect(() => {
     if (existingShift) {

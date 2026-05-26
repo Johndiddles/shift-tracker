@@ -49,6 +49,7 @@ export default function SettingsScreen() {
       payPeriodLengthDays: payLen,
       payPeriodStartDate: form.payPeriodStartDate,
       weekStartDay: weekStart as any,
+      doublePayForPublicHolidays: form.doublePayForPublicHolidays,
     });
 
     Alert.alert('Success', 'Settings have been saved.');

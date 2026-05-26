@@ -125,9 +125,14 @@ export function calculatePeriodSummary(
       weekShifts.forEach((shift) => {
         let start = parseISO(shift.startTime);
         let end = parseISO(shift.endTime);
+        const baseDate = parseISO(shift.date);
+        
+        start.setFullYear(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+        end.setFullYear(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+
         if (end < start) end = addDays(end, 1);
 
-        let current = start;
+        let current = new Date(start);
         while (current < end) {
           const nextMidnight = new Date(current);
           nextMidnight.setHours(24, 0, 0, 0);
