@@ -102,21 +102,18 @@ export default function ExportScreen() {
         FileSystem.Paths.document,
         "shift-tracker",
       );
-      
+
       if (!newFileDir.exists) {
         newFileDir.create();
       }
 
       const destinationFile = new FileSystem.File(newFileDir, filename);
-      console.log(JSON.stringify({ uri, newFileDir: newFileDir.uri, newFileUri: destinationFile.uri }, null, 2));
-      
+
       if (destinationFile.exists) {
         destinationFile.delete();
       }
 
       await new FileSystem.File(uri).copy(destinationFile);
-
-      console.log("PDF URI: ", destinationFile.uri);
 
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable) {
