@@ -1,21 +1,24 @@
-import { ShiftEntry, AppSettings } from '../store/useShiftStore';
 import {
-  parseISO,
-  startOfWeek,
-  endOfWeek,
-  isWithinInterval,
-  differenceInMinutes,
   addDays,
   differenceInDays,
+  differenceInMinutes,
+  endOfWeek,
   format,
-} from 'date-fns';
+  isWithinInterval,
+  parseISO,
+  startOfWeek,
+} from "date-fns";
+import { AppSettings, ShiftEntry } from "../store/useShiftStore";
 
 /**
  * Calculate the number of hours worked between two timestamps.
  * Assumes startTime and endTime are ISO strings. If endTime is "before" startTime
  * but they are on the same date structurally, it implies it crosses midnight.
  */
-export function calculateShiftHours(startTimeISO: string, endTimeISO: string): number {
+export function calculateShiftHours(
+  startTimeISO: string,
+  endTimeISO: string,
+): number {
   let start = parseISO(startTimeISO);
   let end = parseISO(endTimeISO);
 
@@ -35,22 +38,30 @@ export function calculateShiftHours(startTimeISO: string, endTimeISO: string): n
 export function getCurrentPayPeriodBounds(
   anchorDate: Date,
   lengthDays: number,
-  targetDate: Date = new Date()
+  targetDate: Date = new Date(),
 ): { start: Date; end: Date } {
   // Truncate times for day difference
-  const anchor = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), anchorDate.getDate());
-  const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-  
+  const anchor = new Date(
+    anchorDate.getFullYear(),
+    anchorDate.getMonth(),
+    anchorDate.getDate(),
+  );
+  const target = new Date(
+    targetDate.getFullYear(),
+    targetDate.getMonth(),
+    targetDate.getDate(),
+  );
+
   const daysDiff = differenceInDays(target, anchor);
-  
+
   // Calculate how many full periods have passed since anchor
   // If target is before anchor, this handles negative periods correctly
   const periodsPassed = Math.floor(daysDiff / lengthDays);
-  
+
   const currentPeriodStart = addDays(anchor, periodsPassed * lengthDays);
   // Period end is lengthDays - 1 after start
   const currentPeriodEnd = addDays(currentPeriodStart, lengthDays - 1);
-  
+
   return { start: currentPeriodStart, end: currentPeriodEnd };
 }
 
@@ -86,7 +97,7 @@ export function calculatePeriodSummary(
   periodStart: Date,
   periodEnd: Date,
   settings: AppSettings,
-  publicHolidays: string[]
+  publicHolidays: string[],
 ): PeriodSummary {
   // Filter shifts that fall within the period
   const periodShifts = shifts.filter((s) => {
@@ -117,8 +128,11 @@ export function calculatePeriodSummary(
     const wStart = parseISO(weekStartISO);
     const wEnd = endOfWeek(wStart, { weekStartsOn: settings.weekStartDay });
 
-    const weekTotalHours = weekShifts.reduce((acc, shift) => acc + shift.hoursWorked, 0);
-    
+    const weekTotalHours = weekShifts.reduce(
+      (acc, shift) => acc + shift.hoursWorked,
+      0,
+    );
+
     // Calculate public holiday hours separately if the setting is enabled
     let weekPublicHolidayHours = 0;
     if (settings.doublePayForPublicHolidays) {
@@ -126,9 +140,17 @@ export function calculatePeriodSummary(
         let start = parseISO(shift.startTime);
         let end = parseISO(shift.endTime);
         const baseDate = parseISO(shift.date);
-        
-        start.setFullYear(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
-        end.setFullYear(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+
+        start.setFullYear(
+          baseDate.getFullYear(),
+          baseDate.getMonth(),
+          baseDate.getDate(),
+        );
+        end.setFullYear(
+          baseDate.getFullYear(),
+          baseDate.getMonth(),
+          baseDate.getDate(),
+        );
 
         if (end < start) end = addDays(end, 1);
 
@@ -139,17 +161,17 @@ export function calculatePeriodSummary(
 
           const segmentEnd = end < nextMidnight ? end : nextMidnight;
           const mins = differenceInMinutes(segmentEnd, current);
-          const dateStr = format(current, 'yyyy-MM-dd');
+          const dateStr = format(current, "yyyy-MM-dd");
 
           if (publicHolidays.includes(dateStr)) {
-            weekPublicHolidayHours += (mins / 60.0);
+            weekPublicHolidayHours += mins / 60.0;
           }
 
           current = nextMidnight;
         }
       });
     }
-    
+
     // Normal hours (excluding public holiday hours to prevent double-dipping)
     const normalHours = Math.max(0, weekTotalHours - weekPublicHolidayHours);
 
@@ -176,8 +198,10 @@ export function calculatePeriodSummary(
   weeks.sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime());
 
   const estimatedRegularPay = totalPeriodRegular * settings.regularHourlyRate;
-  const estimatedOvertimePay = totalPeriodOvertime * settings.overtimeHourlyRate;
-  const estimatedPublicHolidayPay = totalPeriodPublicHoliday * (settings.regularHourlyRate * 2);
+  const estimatedOvertimePay =
+    totalPeriodOvertime * settings.overtimeHourlyRate;
+  const estimatedPublicHolidayPay =
+    totalPeriodPublicHoliday * (settings.regularHourlyRate * 2);
 
   return {
     totalShifts: periodShifts.length,
@@ -188,7 +212,8 @@ export function calculatePeriodSummary(
     estimatedRegularPay,
     estimatedOvertimePay,
     estimatedPublicHolidayPay,
-    estimatedTotalPay: estimatedRegularPay + estimatedOvertimePay + estimatedPublicHolidayPay,
+    estimatedTotalPay:
+      estimatedRegularPay + estimatedOvertimePay + estimatedPublicHolidayPay,
     weeks,
   };
 }
@@ -199,13 +224,15 @@ export function generatePDFHtml(
   periodStart: Date,
   periodEnd: Date,
   settings: AppSettings,
-  publicHolidays: string[]
+  publicHolidays: string[],
 ): string {
-  const formatTime = (iso: string) => format(parseISO(iso), 'h:mm a');
-  const formatDate = (iso: string) => format(parseISO(iso), 'MMM d, yyyy');
+  const formatTime = (iso: string) => format(parseISO(iso), "h:mm a");
+  const formatDate = (iso: string) => format(parseISO(iso), "MMM d, yyyy");
 
   // Sort shifts chronologically
-  const sortedShifts = [...shifts].sort((a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime());
+  const sortedShifts = [...shifts].sort(
+    (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
+  );
 
   const shiftRows = sortedShifts
     .map(
@@ -216,9 +243,9 @@ export function generatePDFHtml(
       <td>${formatTime(s.startTime)} - ${formatTime(s.endTime)}</td>
       <td>${s.hoursWorked.toFixed(2)}</td>
     </tr>
-  `
+  `,
     )
-    .join('');
+    .join("");
 
   return `
     <html>
@@ -239,12 +266,12 @@ export function generatePDFHtml(
       </head>
       <body>
         <div class="header">
-          <h1>ShiftTrack Pay Period Summary</h1>
-          <p><strong>Employee:</strong> ${settings.employeeName || 'Unknown Employee'}</p>
-          <p><strong>Period:</strong> ${format(periodStart, 'MMM d, yyyy')} - ${format(
-    periodEnd,
-    'MMM d, yyyy'
-  )}</p>
+          <h1>Pay Period Summary</h1>
+          <p><strong>Employee:</strong> ${settings.employeeName || "Unknown Employee"}</p>
+          <p><strong>Period:</strong> ${format(periodStart, "MMM d, yyyy")} - ${format(
+            periodEnd,
+            "MMM d, yyyy",
+          )}</p>
         </div>
 
         <div class="summary-card">
