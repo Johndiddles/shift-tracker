@@ -1,4 +1,4 @@
-import { View, ScrollView, Text, Alert, Switch, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, ScrollView, Text, Alert, Switch, TouchableOpacity, Modal, FlatList, Platform } from 'react-native';
 import { useShiftStore } from '../../store/useShiftStore';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CURRENCIES, getCurrency } from '../../constants/currencies';
 import { Globe, Search, ChevronRight } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format, parseISO } from 'date-fns';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -21,6 +23,24 @@ export default function SettingsScreen() {
   });
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [currencySearch, setCurrencySearch] = useState('');
+
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showMorningTimePicker, setShowMorningTimePicker] = useState(false);
+  const [showAfternoonTimePicker, setShowAfternoonTimePicker] = useState(false);
+  const [showNightTimePicker, setShowNightTimePicker] = useState(false);
+
+  const parseTimeStringToDate = (timeStr: string) => {
+    const [hours, minutes] = (timeStr || '00:00').split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours || 0, minutes || 0, 0, 0);
+    return date;
+  };
+
+  const formatTimeToStr = (date: Date) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
 
   const handleChange = (key: keyof typeof settings, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -170,11 +190,32 @@ export default function SettingsScreen() {
           onChangeText={(v) => handleChange('payPeriodLengthDays', v)}
           keyboardType="number-pad"
         />
-        <Input
-          label="Pay Period Start Anchor Date (YYYY-MM-DD)"
-          value={form.payPeriodStartDate}
-          onChangeText={(v) => handleChange('payPeriodStartDate', v)}
-        />
+        
+        <View className="mb-4">
+          <Text className="mb-2 text-sm font-medium text-gray-700">Pay Period Start Anchor Date</Text>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            className="h-14 justify-center rounded-xl border border-gray-200 bg-white px-4 active:bg-gray-50"
+          >
+            <Text className="text-base text-gray-900">
+              {format(parseISO(form.payPeriodStartDate), 'EEEE, MMM d, yyyy')}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={parseISO(form.payPeriodStartDate)}
+              mode="date"
+              display="default"
+              onValueChange={(event, selectedDate) => {
+                setShowDatePicker(Platform.OS === 'ios');
+                if (selectedDate) {
+                  handleChange('payPeriodStartDate', format(selectedDate, 'yyyy-MM-dd'));
+                }
+              }}
+            />
+          )}
+        </View>
+
         <Input
           label="Week Starts On (0=Sun, 1=Mon...)"
           value={String(form.weekStartDay)}
@@ -193,12 +234,30 @@ export default function SettingsScreen() {
             onChangeText={(v) => handleChange('morningShiftLabel', v)}
           />
           <View className="flex-row gap-4">
-            <Input
-              className="flex-1"
-              label="Start Time"
-              value={form.morningShiftStart}
-              onChangeText={(v) => handleChange('morningShiftStart', v)}
-            />
+            <View className="flex-1 mb-4">
+              <Text className="mb-2 text-sm font-medium text-gray-700">Start Time</Text>
+              <TouchableOpacity
+                onPress={() => setShowMorningTimePicker(true)}
+                className="h-14 justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 active:bg-gray-100"
+              >
+                <Text className="text-base text-gray-900">
+                  {format(parseTimeStringToDate(form.morningShiftStart), 'h:mm a')}
+                </Text>
+              </TouchableOpacity>
+              {showMorningTimePicker && (
+                <DateTimePicker
+                  value={parseTimeStringToDate(form.morningShiftStart)}
+                  mode="time"
+                  display="default"
+                  onValueChange={(event, selectedDate) => {
+                    setShowMorningTimePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      handleChange('morningShiftStart', formatTimeToStr(selectedDate));
+                    }
+                  }}
+                />
+              )}
+            </View>
             <Input
               className="flex-1"
               label="Duration (hrs)"
@@ -218,12 +277,30 @@ export default function SettingsScreen() {
             onChangeText={(v) => handleChange('afternoonShiftLabel', v)}
           />
           <View className="flex-row gap-4">
-            <Input
-              className="flex-1"
-              label="Start Time"
-              value={form.afternoonShiftStart}
-              onChangeText={(v) => handleChange('afternoonShiftStart', v)}
-            />
+            <View className="flex-1 mb-4">
+              <Text className="mb-2 text-sm font-medium text-gray-700">Start Time</Text>
+              <TouchableOpacity
+                onPress={() => setShowAfternoonTimePicker(true)}
+                className="h-14 justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 active:bg-gray-100"
+              >
+                <Text className="text-base text-gray-900">
+                  {format(parseTimeStringToDate(form.afternoonShiftStart), 'h:mm a')}
+                </Text>
+              </TouchableOpacity>
+              {showAfternoonTimePicker && (
+                <DateTimePicker
+                  value={parseTimeStringToDate(form.afternoonShiftStart)}
+                  mode="time"
+                  display="default"
+                  onValueChange={(event, selectedDate) => {
+                    setShowAfternoonTimePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      handleChange('afternoonShiftStart', formatTimeToStr(selectedDate));
+                    }
+                  }}
+                />
+              )}
+            </View>
             <Input
               className="flex-1"
               label="Duration (hrs)"
@@ -243,12 +320,30 @@ export default function SettingsScreen() {
             onChangeText={(v) => handleChange('nightShiftLabel', v)}
           />
           <View className="flex-row gap-4">
-            <Input
-              className="flex-1"
-              label="Start Time"
-              value={form.nightShiftStart}
-              onChangeText={(v) => handleChange('nightShiftStart', v)}
-            />
+            <View className="flex-1 mb-4">
+              <Text className="mb-2 text-sm font-medium text-gray-700">Start Time</Text>
+              <TouchableOpacity
+                onPress={() => setShowNightTimePicker(true)}
+                className="h-14 justify-center rounded-xl border border-gray-200 bg-gray-50 px-4 active:bg-gray-100"
+              >
+                <Text className="text-base text-gray-900">
+                  {format(parseTimeStringToDate(form.nightShiftStart), 'h:mm a')}
+                </Text>
+              </TouchableOpacity>
+              {showNightTimePicker && (
+                <DateTimePicker
+                  value={parseTimeStringToDate(form.nightShiftStart)}
+                  mode="time"
+                  display="default"
+                  onValueChange={(event, selectedDate) => {
+                    setShowNightTimePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      handleChange('nightShiftStart', formatTimeToStr(selectedDate));
+                    }
+                  }}
+                />
+              )}
+            </View>
             <Input
               className="flex-1"
               label="Duration (hrs)"
