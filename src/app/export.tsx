@@ -11,7 +11,7 @@ import * as MediaLibrary from "expo-media-library";
 import * as Print from "expo-print";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Alert,
   Platform,
@@ -23,6 +23,8 @@ import {
 import { Button } from "../components/Button";
 import { useShiftStore } from "../store/useShiftStore";
 import { calculatePeriodSummary, generatePDFHtml } from "../utils/calculations";
+import ViewShot from "react-native-view-shot";
+import { ReportView } from "../components/ReportView";
 
 export default function ExportScreen() {
   const { start, end } = useLocalSearchParams<{
@@ -40,7 +42,9 @@ export default function ExportScreen() {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingImage, setIsExportingImage] = useState(false);
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  const viewShotRef = useRef<ViewShot>(null);
 
   const { filteredShifts, summary } = useMemo(() => {
     const s = startOfDay(startDate);
@@ -139,6 +143,81 @@ export default function ExportScreen() {
     }
   };
 
+  const handleExportImage = async () => {
+    if (filteredShifts.length === 0) {
+      Alert.alert(
+        "No Data",
+        "There are no shifts in the selected date range to export.",
+      );
+      return;
+    }
+
+    try {
+      setIsExportingImage(true);
+
+      if (!permissionResponse?.granted) {
+        const response = await requestPermission();
+        if (!response.granted) {
+          setIsExportingImage(false);
+          Alert.alert(
+            "Permission Required",
+            "File system permission is required to export and save the report.",
+          );
+          return;
+        }
+      }
+
+      // We need a short delay to ensure React has rendered the hidden view with new data
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const uri = await viewShotRef.current?.capture?.();
+      
+      if (!uri) throw new Error("Failed to capture view");
+
+      const safeStartDate = format(startDate, "MMM_dd_yyyy");
+      const safeEndDate = format(endDate, "MMM_dd_yyyy");
+      const filename = `ShiftTrack_Report_${safeStartDate}_to_${safeEndDate}.jpg`;
+      const newFileDir = new FileSystem.Directory(
+        FileSystem.Paths.document,
+        "shift-tracker",
+      );
+
+      if (!newFileDir.exists) {
+        newFileDir.create();
+      }
+
+      const destinationFile = new FileSystem.File(newFileDir, filename);
+
+      if (destinationFile.exists) {
+        destinationFile.delete();
+      }
+
+      await new FileSystem.File(uri).copy(destinationFile);
+
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(destinationFile.uri, {
+          mimeType: "image/jpeg",
+          dialogTitle: "Share ShiftTrack Report Image",
+          UTI: "public.jpeg",
+        });
+      } else {
+        Alert.alert(
+          "Sharing Unavailable",
+          "Sharing is not available on this device.",
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert(
+        "Export Failed",
+        "An error occurred while generating the image.",
+      );
+    } finally {
+      setIsExportingImage(false);
+    }
+  };
+
   return (
     <View className="flex-1 bg-gray-50">
       <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -208,11 +287,31 @@ export default function ExportScreen() {
         />
 
         <Button
+          label="Export as Image"
+          onPress={handleExportImage}
+          isLoading={isExportingImage}
+          className="mb-4 shadow-lg shadow-blue-500/30"
+        />
+
+        <Button
           label="Cancel"
           variant="secondary"
           onPress={() => router.back()}
         />
       </ScrollView>
+
+      {/* Hidden view for capturing image */}
+      <View style={{ position: "absolute", left: -10000, top: -10000 }}>
+        <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 0.9 }}>
+          <ReportView
+            shifts={filteredShifts}
+            summary={summary}
+            periodStart={startOfDay(startDate)}
+            periodEnd={endOfDay(endDate)}
+            settings={settings}
+          />
+        </ViewShot>
+      </View>
     </View>
   );
 }
