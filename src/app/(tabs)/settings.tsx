@@ -1,15 +1,28 @@
-import { View, ScrollView, Text, Alert, Switch } from 'react-native';
+import { View, ScrollView, Text, Alert, Switch, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { useShiftStore } from '../../store/useShiftStore';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CURRENCIES, getCurrency } from '../../constants/currencies';
+import { Globe, Search, ChevronRight } from 'lucide-react-native';
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const { settings, updateSettings, resetSettings } = useShiftStore();
 
-  const [form, setForm] = useState({ ...settings });
+  const [form, setForm] = useState({
+    ...settings,
+    currency: settings.currency || 'USD',
+    morningShiftLabel: settings.morningShiftLabel || 'Morning',
+    afternoonShiftLabel: settings.afternoonShiftLabel || 'Afternoon',
+    nightShiftLabel: settings.nightShiftLabel || 'Night',
+    customShiftLabel: settings.customShiftLabel || 'Custom',
+  });
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [currencySearch, setCurrencySearch] = useState('');
 
-  const handleChange = (key: keyof typeof settings, value: string) => {
+  const handleChange = (key: keyof typeof settings, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -36,16 +49,37 @@ export default function SettingsScreen() {
       return;
     }
 
+    const morningLabel = (form.morningShiftLabel || 'Morning').trim();
+    const afternoonLabel = (form.afternoonShiftLabel || 'Afternoon').trim();
+    const nightLabel = (form.nightShiftLabel || 'Night').trim();
+    const customLabel = (form.customShiftLabel || 'Custom').trim();
+
+    if (!morningLabel || !afternoonLabel || !nightLabel || !customLabel) {
+      Alert.alert('Invalid Input', 'Shift display labels cannot be empty.');
+      return;
+    }
+
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(form.morningShiftStart) || !timeRegex.test(form.afternoonShiftStart) || !timeRegex.test(form.nightShiftStart)) {
+      Alert.alert('Invalid Time Format', 'Shift starts must be in HH:MM 24-hour format (e.g. 07:00).');
+      return;
+    }
+
     updateSettings({
       employeeName: form.employeeName,
+      currency: form.currency || 'USD',
       regularHourlyRate: regularRate,
       overtimeHourlyRate: overtimeRate,
       morningShiftStart: form.morningShiftStart,
       morningShiftDuration: morningDur,
+      morningShiftLabel: morningLabel,
       afternoonShiftStart: form.afternoonShiftStart,
       afternoonShiftDuration: afternoonDur,
+      afternoonShiftLabel: afternoonLabel,
       nightShiftStart: form.nightShiftStart,
       nightShiftDuration: nightDur,
+      nightShiftLabel: nightLabel,
+      customShiftLabel: customLabel,
       payPeriodLengthDays: payLen,
       payPeriodStartDate: form.payPeriodStartDate,
       weekStartDay: weekStart as any,
@@ -63,16 +97,34 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: () => {
           resetSettings();
-          setForm(useShiftStore.getState().settings);
+          const resetState = useShiftStore.getState().settings;
+          setForm({
+            ...resetState,
+            currency: resetState.currency || 'USD',
+            morningShiftLabel: resetState.morningShiftLabel || 'Morning',
+            afternoonShiftLabel: resetState.afternoonShiftLabel || 'Afternoon',
+            nightShiftLabel: resetState.nightShiftLabel || 'Night',
+            customShiftLabel: resetState.customShiftLabel || 'Custom',
+          });
         },
       },
     ]);
   };
 
+  const activeCurrency = getCurrency(form.currency);
+
+  const filteredCurrencies = CURRENCIES.filter(
+    (c) =>
+      c.name.toLowerCase().includes(currencySearch.toLowerCase()) ||
+      c.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
+      c.symbol.includes(currencySearch)
+  );
+
   return (
     <View className="flex-1 bg-gray-50">
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text className="mb-4 text-xl font-bold text-gray-900">Personal Info</Text>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+        <Text className="mb-4 text-xl font-bold text-gray-900">Personal Info & Currency</Text>
+        
         <Input
           label="Employee Name"
           value={form.employeeName}
@@ -80,15 +132,34 @@ export default function SettingsScreen() {
           placeholder="John Doe"
         />
 
-        <Text className="mb-4 mt-4 text-xl font-bold text-gray-900">Pay Configuration</Text>
+        <Text className="mb-2 text-sm font-medium text-gray-700">App Currency</Text>
+        <TouchableOpacity
+          onPress={() => setShowCurrencyModal(true)}
+          className="h-14 flex-row items-center justify-between rounded-xl border border-gray-200 bg-white px-4 mb-6 active:bg-gray-50"
+        >
+          <View className="flex-row items-center">
+            <Globe size={20} color="#4b5563" />
+            <Text className="ml-3 text-base text-gray-900 font-semibold">
+              {activeCurrency.name} ({activeCurrency.code})
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-lg font-bold text-blue-600">
+              {activeCurrency.symbol}
+            </Text>
+            <ChevronRight size={18} color="#9ca3af" />
+          </View>
+        </TouchableOpacity>
+
+        <Text className="mb-4 text-xl font-bold text-gray-900">Pay Configuration</Text>
         <Input
-          label="Regular Hourly Rate ($)"
+          label={`Regular Hourly Rate (${activeCurrency.code} - ${activeCurrency.symbol})`}
           value={String(form.regularHourlyRate)}
           onChangeText={(v) => handleChange('regularHourlyRate', v)}
           keyboardType="decimal-pad"
         />
         <Input
-          label="Overtime Hourly Rate ($)"
+          label={`Overtime Hourly Rate (${activeCurrency.code} - ${activeCurrency.symbol})`}
           value={String(form.overtimeHourlyRate)}
           onChangeText={(v) => handleChange('overtimeHourlyRate', v)}
           keyboardType="decimal-pad"
@@ -111,55 +182,90 @@ export default function SettingsScreen() {
           keyboardType="number-pad"
         />
 
-        <Text className="mb-4 mt-4 text-xl font-bold text-gray-900">Shift Defaults</Text>
-        <Text className="font-semibold text-gray-700">Morning Shift</Text>
-        <View className="flex-row gap-4 mb-2">
+        <Text className="mb-4 mt-4 text-xl font-bold text-gray-900">Shift Defaults & Labels</Text>
+        
+        {/* Morning Shift */}
+        <View className="mb-4 bg-white p-4 rounded-xl border border-gray-200">
+          <Text className="font-bold text-blue-600 mb-3 uppercase tracking-wider text-xs">Morning Shift</Text>
           <Input
-            className="flex-1"
-            label="Start Time"
-            value={form.morningShiftStart}
-            onChangeText={(v) => handleChange('morningShiftStart', v)}
+            label="Display Label"
+            value={form.morningShiftLabel}
+            onChangeText={(v) => handleChange('morningShiftLabel', v)}
           />
-          <Input
-            className="flex-1"
-            label="Duration (hrs)"
-            value={String(form.morningShiftDuration)}
-            onChangeText={(v) => handleChange('morningShiftDuration', v)}
-            keyboardType="decimal-pad"
-          />
+          <View className="flex-row gap-4">
+            <Input
+              className="flex-1"
+              label="Start Time"
+              value={form.morningShiftStart}
+              onChangeText={(v) => handleChange('morningShiftStart', v)}
+            />
+            <Input
+              className="flex-1"
+              label="Duration (hrs)"
+              value={String(form.morningShiftDuration)}
+              onChangeText={(v) => handleChange('morningShiftDuration', v)}
+              keyboardType="decimal-pad"
+            />
+          </View>
         </View>
 
-        <Text className="font-semibold text-gray-700">Afternoon Shift</Text>
-        <View className="flex-row gap-4 mb-2">
+        {/* Afternoon Shift */}
+        <View className="mb-4 bg-white p-4 rounded-xl border border-gray-200">
+          <Text className="font-bold text-orange-600 mb-3 uppercase tracking-wider text-xs">Afternoon Shift</Text>
           <Input
-            className="flex-1"
-            label="Start Time"
-            value={form.afternoonShiftStart}
-            onChangeText={(v) => handleChange('afternoonShiftStart', v)}
+            label="Display Label"
+            value={form.afternoonShiftLabel}
+            onChangeText={(v) => handleChange('afternoonShiftLabel', v)}
           />
-          <Input
-            className="flex-1"
-            label="Duration (hrs)"
-            value={String(form.afternoonShiftDuration)}
-            onChangeText={(v) => handleChange('afternoonShiftDuration', v)}
-            keyboardType="decimal-pad"
-          />
+          <View className="flex-row gap-4">
+            <Input
+              className="flex-1"
+              label="Start Time"
+              value={form.afternoonShiftStart}
+              onChangeText={(v) => handleChange('afternoonShiftStart', v)}
+            />
+            <Input
+              className="flex-1"
+              label="Duration (hrs)"
+              value={String(form.afternoonShiftDuration)}
+              onChangeText={(v) => handleChange('afternoonShiftDuration', v)}
+              keyboardType="decimal-pad"
+            />
+          </View>
         </View>
 
-        <Text className="font-semibold text-gray-700">Night Shift</Text>
-        <View className="flex-row gap-4 mb-2">
+        {/* Night Shift */}
+        <View className="mb-4 bg-white p-4 rounded-xl border border-gray-200">
+          <Text className="font-bold text-indigo-600 mb-3 uppercase tracking-wider text-xs">Night Shift</Text>
           <Input
-            className="flex-1"
-            label="Start Time"
-            value={form.nightShiftStart}
-            onChangeText={(v) => handleChange('nightShiftStart', v)}
+            label="Display Label"
+            value={form.nightShiftLabel}
+            onChangeText={(v) => handleChange('nightShiftLabel', v)}
           />
+          <View className="flex-row gap-4">
+            <Input
+              className="flex-1"
+              label="Start Time"
+              value={form.nightShiftStart}
+              onChangeText={(v) => handleChange('nightShiftStart', v)}
+            />
+            <Input
+              className="flex-1"
+              label="Duration (hrs)"
+              value={String(form.nightShiftDuration)}
+              onChangeText={(v) => handleChange('nightShiftDuration', v)}
+              keyboardType="decimal-pad"
+            />
+          </View>
+        </View>
+
+        {/* Custom Shift */}
+        <View className="mb-4 bg-white p-4 rounded-xl border border-gray-200">
+          <Text className="font-bold text-gray-600 mb-3 uppercase tracking-wider text-xs">Custom Shift</Text>
           <Input
-            className="flex-1"
-            label="Duration (hrs)"
-            value={String(form.nightShiftDuration)}
-            onChangeText={(v) => handleChange('nightShiftDuration', v)}
-            keyboardType="decimal-pad"
+            label="Display Label"
+            value={form.customShiftLabel}
+            onChangeText={(v) => handleChange('customShiftLabel', v)}
           />
         </View>
 
@@ -171,7 +277,7 @@ export default function SettingsScreen() {
           </View>
           <Switch
             value={form.doublePayForPublicHolidays}
-            onValueChange={(val) => handleChange('doublePayForPublicHolidays', val as any)}
+            onValueChange={(val) => handleChange('doublePayForPublicHolidays', val)}
             trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
             thumbColor={'#ffffff'}
           />
@@ -182,6 +288,85 @@ export default function SettingsScreen() {
           <Button label="Reset Defaults" variant="danger" onPress={handleReset} />
         </View>
       </ScrollView>
+
+      {/* CURRENCY SELECTION MODAL */}
+      <Modal
+        visible={showCurrencyModal}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowCurrencyModal(false)}
+      >
+        <View
+          style={{ paddingTop: insets.top + 10, paddingBottom: insets.bottom }}
+          className="flex-1 bg-white"
+        >
+          {/* Header */}
+          <View className="px-6 py-4 flex-row items-center justify-between border-b border-gray-100">
+            <Text className="text-xl font-bold text-gray-900">Select Currency</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowCurrencyModal(false);
+                setCurrencySearch('');
+              }}
+              className="px-3 py-1.5 bg-gray-100 rounded-full"
+            >
+              <Text className="text-sm font-semibold text-gray-600">Close</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Search Input */}
+          <View className="px-6 py-4">
+            <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-3 h-12">
+              <Search size={18} color="#9ca3af" />
+              <Input
+                className="flex-1 mb-0 h-full border-0 bg-transparent px-2 text-sm"
+                placeholder="Search name, code, or symbol..."
+                value={currencySearch}
+                onChangeText={setCurrencySearch}
+                autoFocus={true}
+              />
+            </View>
+          </View>
+
+          {/* List */}
+          <FlatList
+            data={filteredCurrencies}
+            keyExtractor={(item) => item.code}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  handleChange('currency', item.code);
+                  setShowCurrencyModal(false);
+                  setCurrencySearch('');
+                }}
+                className={`flex-row items-center justify-between py-4 border-b border-gray-100 ${
+                  form.currency === item.code ? 'bg-blue-50/50 px-2 rounded-xl border-b-0' : ''
+                }`}
+              >
+                <View className="flex-1 pr-4">
+                  <Text className="text-base font-semibold text-gray-900">
+                    {item.name}
+                  </Text>
+                  <Text className="text-xs text-gray-500 mt-0.5">{item.code}</Text>
+                </View>
+                <Text
+                  className={`text-lg font-bold ${
+                    form.currency === item.code ? 'text-blue-600' : 'text-gray-400'
+                  }`}
+                >
+                  {item.symbol}
+                </Text>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={() => (
+              <View className="items-center justify-center mt-20">
+                <Text className="text-gray-500">No currencies match your search.</Text>
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
     </View>
   );
 }

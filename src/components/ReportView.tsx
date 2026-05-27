@@ -1,8 +1,9 @@
 import { format, parseISO } from "date-fns";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AppSettings, ShiftEntry } from "../store/useShiftStore";
+import { AppSettings, ShiftEntry, ShiftType } from "../store/useShiftStore";
 import { PeriodSummary } from "../utils/calculations";
+import { getCurrency } from "../constants/currencies";
 
 interface ReportViewProps {
   shifts: ShiftEntry[];
@@ -17,9 +18,26 @@ export const ReportView = React.forwardRef<View, ReportViewProps>(
     const formatTime = (iso: string) => format(parseISO(iso), "h:mm a");
     const formatDate = (iso: string) => format(parseISO(iso), "MMM d, yyyy");
 
+    const currencyInfo = getCurrency(settings.currency);
+
     const sortedShifts = [...shifts].sort(
       (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
     );
+
+    const getShiftLabel = (type: ShiftType) => {
+      switch (type) {
+        case "MORNING":
+          return settings.morningShiftLabel || "Morning";
+        case "AFTERNOON":
+          return settings.afternoonShiftLabel || "Afternoon";
+        case "NIGHT":
+          return settings.nightShiftLabel || "Night";
+        case "CUSTOM":
+          return settings.customShiftLabel || "Custom";
+        default:
+          return type;
+      }
+    };
 
     return (
       <View
@@ -76,25 +94,25 @@ export const ReportView = React.forwardRef<View, ReportViewProps>(
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Estimated Regular Pay</Text>
               <Text style={styles.summaryValue}>
-                ${summary.estimatedRegularPay.toFixed(2)}
+                {currencyInfo.symbol}{summary.estimatedRegularPay.toFixed(2)}
               </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Estimated Overtime Pay</Text>
               <Text style={styles.summaryValue}>
-                ${summary.estimatedOvertimePay.toFixed(2)}
+                {currencyInfo.symbol}{summary.estimatedOvertimePay.toFixed(2)}
               </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Estimated Holiday Pay</Text>
               <Text style={styles.summaryValue}>
-                ${summary.estimatedPublicHolidayPay.toFixed(2)}
+                {currencyInfo.symbol}{summary.estimatedPublicHolidayPay.toFixed(2)}
               </Text>
             </View>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>Estimated Total Pay</Text>
               <Text style={[styles.summaryValue, { color: "#047857" }]}>
-                ${summary.estimatedTotalPay.toFixed(2)}
+                {currencyInfo.symbol}{summary.estimatedTotalPay.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -119,7 +137,7 @@ export const ReportView = React.forwardRef<View, ReportViewProps>(
               <Text style={[styles.tableCell, { flex: 2 }]}>
                 {formatDate(s.date)}
               </Text>
-              <Text style={[styles.tableCell, { flex: 2 }]}>{s.shiftType}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{getShiftLabel(s.shiftType)}</Text>
               <Text style={[styles.tableCell, { flex: 3 }]}>
                 {formatTime(s.startTime)} - {formatTime(s.endTime)}
               </Text>

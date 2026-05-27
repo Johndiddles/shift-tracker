@@ -31,6 +31,11 @@ export interface AppSettings {
   payPeriodStartDate: string; // ISO format date string (YYYY-MM-DD)
   weekStartDay: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 for Sunday
   doublePayForPublicHolidays: boolean;
+  currency: string; // e.g. 'USD'
+  morningShiftLabel: string;
+  afternoonShiftLabel: string;
+  nightShiftLabel: string;
+  customShiftLabel: string;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -47,18 +52,25 @@ const DEFAULT_SETTINGS: AppSettings = {
   payPeriodStartDate: new Date().toISOString().split('T')[0], // Today as default
   weekStartDay: 0,
   doublePayForPublicHolidays: false,
+  currency: 'USD',
+  morningShiftLabel: 'Morning',
+  afternoonShiftLabel: 'Afternoon',
+  nightShiftLabel: 'Night',
+  customShiftLabel: 'Custom',
 };
 
 interface ShiftState {
   shifts: ShiftEntry[];
   settings: AppSettings;
   publicHolidays: string[]; // Array of YYYY-MM-DD strings
+  isSetupComplete: boolean;
   addShift: (shift: Omit<ShiftEntry, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateShift: (id: string, shift: Partial<ShiftEntry>) => void;
   deleteShift: (id: string) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
   togglePublicHoliday: (dateStr: string, isHoliday: boolean) => void;
   resetSettings: () => void;
+  setSetupComplete: (complete: boolean) => void;
 }
 
 export const useShiftStore = create<ShiftState>()(
@@ -67,34 +79,35 @@ export const useShiftStore = create<ShiftState>()(
       shifts: [],
       settings: DEFAULT_SETTINGS,
       publicHolidays: [],
+      isSetupComplete: false,
       addShift: (shiftData) =>
-        set((state) => ({
-          shifts: [
-            ...state.shifts,
-            {
-              ...shiftData,
-              id: uuid.v4() as string,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          ],
-        })),
+          set((state) => ({
+            shifts: [
+              ...state.shifts,
+              {
+                ...shiftData,
+                id: uuid.v4() as string,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+          })),
       updateShift: (id, shiftData) =>
-        set((state) => ({
-          shifts: state.shifts.map((shift) =>
-            shift.id === id
-              ? { ...shift, ...shiftData, updatedAt: new Date().toISOString() }
-              : shift
-          ),
-        })),
+          set((state) => ({
+            shifts: state.shifts.map((shift) =>
+                shift.id === id
+                    ? { ...shift, ...shiftData, updatedAt: new Date().toISOString() }
+                    : shift
+            ),
+          })),
       deleteShift: (id) =>
-        set((state) => ({
-          shifts: state.shifts.filter((shift) => shift.id !== id),
-        })),
+          set((state) => ({
+            shifts: state.shifts.filter((shift) => shift.id !== id),
+          })),
       updateSettings: (newSettings) =>
-        set((state) => ({
-          settings: { ...state.settings, ...newSettings },
-        })),
+          set((state) => ({
+            settings: { ...state.settings, ...newSettings },
+          })),
       togglePublicHoliday: (dateStr, isHoliday) => {
         set((state) => {
           const holidays = new Set(state.publicHolidays || []);
@@ -107,10 +120,20 @@ export const useShiftStore = create<ShiftState>()(
         });
       },
       resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
+      setSetupComplete: (complete) => set({ isSetupComplete: complete }),
     }),
     {
       name: 'shifttrack-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        settings: {
+          ...currentState.settings,
+          ...(persistedState?.settings || {}),
+        },
+      }),
     }
   )
 );
+

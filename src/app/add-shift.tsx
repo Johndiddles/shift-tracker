@@ -191,23 +191,39 @@ export default function AddShiftScreen() {
         </Text>
         <View className="mb-6 flex-row flex-wrap gap-2">
           {(["MORNING", "AFTERNOON", "NIGHT", "CUSTOM"] as ShiftType[]).map(
-            (type) => (
-              <TouchableOpacity
-                key={type}
-                onPress={() => handleShiftTypeChange(type)}
-                className={`rounded-xl border px-4 py-3 ${
-                  shiftType === type
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-                <Text
-                  className={`font-semibold ${shiftType === type ? "text-blue-600" : "text-gray-600"}`}
+            (type) => {
+              const getShiftLabel = (t: ShiftType) => {
+                switch (t) {
+                  case "MORNING":
+                    return settings.morningShiftLabel || "Morning";
+                  case "AFTERNOON":
+                    return settings.afternoonShiftLabel || "Afternoon";
+                  case "NIGHT":
+                    return settings.nightShiftLabel || "Night";
+                  case "CUSTOM":
+                    return settings.customShiftLabel || "Custom";
+                  default:
+                    return t;
+                }
+              };
+              return (
+                <TouchableOpacity
+                  key={type}
+                  onPress={() => handleShiftTypeChange(type)}
+                  className={`rounded-xl border px-4 py-3 ${
+                    shiftType === type
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 bg-white"
+                  }`}
                 >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ),
+                  <Text
+                    className={`font-semibold ${shiftType === type ? "text-blue-600" : "text-gray-600"}`}
+                  >
+                    {getShiftLabel(type)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            },
           )}
         </View>
 

@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { format, parseISO } from 'date-fns';
-import { ShiftEntry } from '../store/useShiftStore';
+import { ShiftEntry, useShiftStore } from '../store/useShiftStore';
 import { Clock, Calendar } from 'lucide-react-native';
 
 interface ShiftCardProps {
@@ -9,6 +9,7 @@ interface ShiftCardProps {
 }
 
 export function ShiftCard({ shift, onPress }: ShiftCardProps) {
+  const settings = useShiftStore((state) => state.settings);
   const shiftDate = parseISO(shift.date);
   const startTime = parseISO(shift.startTime);
   const endTime = parseISO(shift.endTime);
@@ -26,6 +27,21 @@ export function ShiftCard({ shift, onPress }: ShiftCardProps) {
     }
   };
 
+  const getShiftLabel = () => {
+    switch (shift.shiftType) {
+      case 'MORNING':
+        return settings.morningShiftLabel || 'Morning';
+      case 'AFTERNOON':
+        return settings.afternoonShiftLabel || 'Afternoon';
+      case 'NIGHT':
+        return settings.nightShiftLabel || 'Night';
+      case 'CUSTOM':
+        return settings.customShiftLabel || 'Custom';
+      default:
+        return shift.shiftType;
+    }
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -40,7 +56,7 @@ export function ShiftCard({ shift, onPress }: ShiftCardProps) {
           </Text>
         </View>
         <View className={`rounded-full border px-3 py-1 ${getShiftColor()}`}>
-          <Text className="text-xs font-bold uppercase tracking-wider">{shift.shiftType}</Text>
+          <Text className="text-xs font-bold uppercase tracking-wider">{getShiftLabel()}</Text>
         </View>
       </View>
 

@@ -1,11 +1,16 @@
 import { View, Text } from 'react-native';
 import { PeriodSummary } from '../utils/calculations';
+import { useShiftStore } from '../store/useShiftStore';
+import { getCurrency } from '../constants/currencies';
 
 interface SummaryCardProps {
   summary: PeriodSummary;
 }
 
 export function SummaryCard({ summary }: SummaryCardProps) {
+  const settings = useShiftStore((state) => state.settings);
+  const currencyInfo = getCurrency(settings.currency);
+
   return (
     <View className="rounded-3xl bg-blue-600 p-6 shadow-md mb-6">
       <Text className="mb-4 text-sm font-medium text-blue-100 uppercase tracking-widest">
@@ -14,10 +19,10 @@ export function SummaryCard({ summary }: SummaryCardProps) {
       
       <View className="mb-6 flex-row items-end">
         <Text className="text-4xl font-extrabold text-white">
-          ${summary.estimatedTotalPay.toFixed(2)}
+          {currencyInfo.symbol}{summary.estimatedTotalPay.toFixed(2)}
         </Text>
         <Text className="mb-1 ml-2 text-sm font-medium text-blue-200">
-          Est. Pay
+          {currencyInfo.code} Est. Pay
         </Text>
       </View>
 

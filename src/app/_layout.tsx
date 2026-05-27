@@ -14,6 +14,7 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="setup" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen
         name="add-shift"
         options={{

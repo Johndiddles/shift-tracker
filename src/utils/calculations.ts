@@ -8,7 +8,8 @@ import {
   parseISO,
   startOfWeek,
 } from "date-fns";
-import { AppSettings, ShiftEntry } from "../store/useShiftStore";
+import { AppSettings, ShiftEntry, ShiftType } from "../store/useShiftStore";
+import { getCurrency } from "../constants/currencies";
 
 /**
  * Calculate the number of hours worked between two timestamps.
@@ -229,6 +230,23 @@ export function generatePDFHtml(
   const formatTime = (iso: string) => format(parseISO(iso), "h:mm a");
   const formatDate = (iso: string) => format(parseISO(iso), "MMM d, yyyy");
 
+  const currencyInfo = getCurrency(settings.currency);
+
+  const getShiftLabel = (type: ShiftType) => {
+    switch (type) {
+      case "MORNING":
+        return settings.morningShiftLabel || "Morning";
+      case "AFTERNOON":
+        return settings.afternoonShiftLabel || "Afternoon";
+      case "NIGHT":
+        return settings.nightShiftLabel || "Night";
+      case "CUSTOM":
+        return settings.customShiftLabel || "Custom";
+      default:
+        return type;
+    }
+  };
+
   // Sort shifts chronologically
   const sortedShifts = [...shifts].sort(
     (a, b) => parseISO(a.date).getTime() - parseISO(b.date).getTime(),
@@ -239,7 +257,7 @@ export function generatePDFHtml(
       (s) => `
     <tr>
       <td>${formatDate(s.date)}</td>
-      <td>${s.shiftType}</td>
+      <td>${getShiftLabel(s.shiftType)}</td>
       <td>${formatTime(s.startTime)} - ${formatTime(s.endTime)}</td>
       <td>${s.hoursWorked.toFixed(2)}</td>
     </tr>
@@ -296,19 +314,19 @@ export function generatePDFHtml(
           <div class="summary-grid" style="margin-top: 15px;">
             <div class="summary-item">
               <div class="summary-label">Estimated Regular Pay</div>
-              <div class="summary-value">$${summary.estimatedRegularPay.toFixed(2)}</div>
+              <div class="summary-value">${currencyInfo.symbol}${summary.estimatedRegularPay.toFixed(2)}</div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Estimated Overtime Pay</div>
-              <div class="summary-value">$${summary.estimatedOvertimePay.toFixed(2)}</div>
+              <div class="summary-value">${currencyInfo.symbol}${summary.estimatedOvertimePay.toFixed(2)}</div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Estimated Holiday Pay</div>
-              <div class="summary-value">$${summary.estimatedPublicHolidayPay.toFixed(2)}</div>
+              <div class="summary-value">${currencyInfo.symbol}${summary.estimatedPublicHolidayPay.toFixed(2)}</div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Estimated Total Pay</div>
-              <div class="summary-value" style="color: #047857;">$${summary.estimatedTotalPay.toFixed(2)}</div>
+              <div class="summary-value" style="color: #047857;">${currencyInfo.symbol}${summary.estimatedTotalPay.toFixed(2)}</div>
             </div>
           </div>
         </div>
