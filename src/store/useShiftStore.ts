@@ -64,6 +64,7 @@ interface ShiftState {
   settings: AppSettings;
   publicHolidays: string[]; // Array of YYYY-MM-DD strings
   isSetupComplete: boolean;
+  _hasHydrated: boolean;
   addShift: (shift: Omit<ShiftEntry, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateShift: (id: string, shift: Partial<ShiftEntry>) => void;
   deleteShift: (id: string) => void;
@@ -71,6 +72,7 @@ interface ShiftState {
   togglePublicHoliday: (dateStr: string, isHoliday: boolean) => void;
   resetSettings: () => void;
   setSetupComplete: (complete: boolean) => void;
+  setHasHydrated: (complete: boolean) => void;
 }
 
 export const useShiftStore = create<ShiftState>()(
@@ -80,6 +82,7 @@ export const useShiftStore = create<ShiftState>()(
       settings: DEFAULT_SETTINGS,
       publicHolidays: [],
       isSetupComplete: false,
+      _hasHydrated: false,
       addShift: (shiftData) =>
           set((state) => ({
             shifts: [
@@ -121,10 +124,20 @@ export const useShiftStore = create<ShiftState>()(
       },
       resetSettings: () => set({ settings: DEFAULT_SETTINGS }),
       setSetupComplete: (complete) => set({ isSetupComplete: complete }),
+      setHasHydrated: (complete) => set({ _hasHydrated: complete }),
     }),
     {
       name: 'shifttrack-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => {
+        const { _hasHydrated, ...rest } = state;
+        return rest;
+      },
+      onRehydrateStorage: (state) => {
+        return () => {
+          state.setHasHydrated(true);
+        };
+      },
       merge: (persistedState: any, currentState) => ({
         ...currentState,
         ...persistedState,
