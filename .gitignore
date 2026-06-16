@@ -48,3 +48,6 @@ build-*.apk
 
 build-*.aab
 *.aab
+
+# google play console
+shift-tracker-498817-2688468fa5b9.json
