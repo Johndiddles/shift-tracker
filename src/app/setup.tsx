@@ -1,35 +1,34 @@
-import React, { useState } from 'react';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { format } from "date-fns";
+import { router } from "expo-router";
 import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  Switch,
-  Alert,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { useShiftStore } from '../store/useShiftStore';
-import { CURRENCIES, getCurrency } from '../constants/currencies';
-import { Input } from '../components/Input';
-import { Button } from '../components/Button';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { format, parseISO } from 'date-fns';
-import {
-  User,
-  CreditCard,
-  Clock,
   Check,
-  Search,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  CreditCard,
   Globe,
   HelpCircle,
-} from 'lucide-react-native';
+  Search,
+  User,
+} from "lucide-react-native";
+import { useState } from "react";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Input } from "../components/Input";
+import { CURRENCIES, getCurrency } from "../constants/currencies";
+import { useShiftStore } from "../store/useShiftStore";
 
 export default function SetupScreen() {
   const insets = useSafeAreaInsets();
@@ -39,36 +38,39 @@ export default function SetupScreen() {
   const totalSteps = 4;
 
   // Step 1: Personal Info & Currency
-  const [employeeName, setEmployeeName] = useState('');
-  const [currency, setCurrency] = useState('USD');
-  const [currencySearch, setCurrencySearch] = useState('');
+  const [employeeName, setEmployeeName] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  const [currencySearch, setCurrencySearch] = useState("");
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   // Step 2: Pay Configuration
-  const [regularHourlyRate, setRegularHourlyRate] = useState('20.00');
-  const [overtimeHourlyRate, setOvertimeHourlyRate] = useState('30.00');
-  const [payPeriodLengthDays, setPayPeriodLengthDays] = useState('14');
+  const [regularHourlyRate, setRegularHourlyRate] = useState("20.00");
+  const [overtimeHourlyRate, setOvertimeHourlyRate] = useState("30.00");
+  const [payPeriodLengthDays, setPayPeriodLengthDays] = useState("14");
   const [payPeriodStartDate, setPayPeriodStartDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [weekStartDay, setWeekStartDay] = useState<'0' | '1' | '2' | '3' | '4' | '5' | '6'>('0'); // String for input state
+  const [weekStartDay, setWeekStartDay] = useState<
+    "0" | "1" | "2" | "3" | "4" | "5" | "6"
+  >("0"); // String for input state
 
   // Step 3: Shift Defaults & Labels
-  const [morningLabel, setMorningLabel] = useState('Morning');
-  const [morningStart, setMorningStart] = useState('07:00');
-  const [morningDuration, setMorningDuration] = useState('8.0');
+  const [morningLabel, setMorningLabel] = useState("Morning");
+  const [morningStart, setMorningStart] = useState("07:00");
+  const [morningDuration, setMorningDuration] = useState("8.0");
 
-  const [afternoonLabel, setAfternoonLabel] = useState('Afternoon');
-  const [afternoonStart, setAfternoonStart] = useState('15:00');
-  const [afternoonDuration, setAfternoonDuration] = useState('8.0');
+  const [afternoonLabel, setAfternoonLabel] = useState("Afternoon");
+  const [afternoonStart, setAfternoonStart] = useState("15:00");
+  const [afternoonDuration, setAfternoonDuration] = useState("8.0");
 
-  const [nightLabel, setNightLabel] = useState('Night');
-  const [nightStart, setNightStart] = useState('23:00');
-  const [nightDuration, setNightDuration] = useState('8.0');
+  const [nightLabel, setNightLabel] = useState("Night");
+  const [nightStart, setNightStart] = useState("23:00");
+  const [nightDuration, setNightDuration] = useState("8.0");
 
-  const [customLabel, setCustomLabel] = useState('Custom');
+  const [customLabel, setCustomLabel] = useState("Custom");
 
   // Step 4: Policies & Finish
-  const [doublePayForPublicHolidays, setDoublePayForPublicHolidays] = useState(false);
+  const [doublePayForPublicHolidays, setDoublePayForPublicHolidays] =
+    useState(false);
 
   const selectedCurrencyInfo = getCurrency(currency);
 
@@ -76,13 +78,13 @@ export default function SetupScreen() {
     (c) =>
       c.name.toLowerCase().includes(currencySearch.toLowerCase()) ||
       c.code.toLowerCase().includes(currencySearch.toLowerCase()) ||
-      c.symbol.includes(currencySearch)
+      c.symbol.includes(currencySearch),
   );
 
   const handleNext = () => {
     if (step === 1) {
       if (!employeeName.trim()) {
-        Alert.alert('Name Required', 'Please enter your name to proceed.');
+        Alert.alert("Name Required", "Please enter your name to proceed.");
         return;
       }
       setStep(2);
@@ -93,19 +95,31 @@ export default function SetupScreen() {
       const ws = parseInt(weekStartDay, 10);
 
       if (isNaN(reg) || reg < 0) {
-        Alert.alert('Invalid Input', 'Please enter a valid regular hourly rate.');
+        Alert.alert(
+          "Invalid Input",
+          "Please enter a valid regular hourly rate.",
+        );
         return;
       }
       if (isNaN(ot) || ot < 0) {
-        Alert.alert('Invalid Input', 'Please enter a valid overtime hourly rate.');
+        Alert.alert(
+          "Invalid Input",
+          "Please enter a valid overtime hourly rate.",
+        );
         return;
       }
       if (isNaN(len) || len <= 0) {
-        Alert.alert('Invalid Input', 'Please enter a valid pay period length in days.');
+        Alert.alert(
+          "Invalid Input",
+          "Please enter a valid pay period length in days.",
+        );
         return;
       }
       if (isNaN(ws) || ws < 0 || ws > 6) {
-        Alert.alert('Invalid Input', 'Week Start Day must be between 0 (Sunday) and 6 (Saturday).');
+        Alert.alert(
+          "Invalid Input",
+          "Week Start Day must be between 0 (Sunday) and 6 (Saturday).",
+        );
         return;
       }
       setStep(3);
@@ -115,38 +129,66 @@ export default function SetupScreen() {
       const nightDur = parseFloat(nightDuration);
 
       if (!morningLabel.trim()) {
-        Alert.alert('Label Required', 'Please specify a label for the morning shift.');
+        Alert.alert(
+          "Label Required",
+          "Please specify a label for the morning shift.",
+        );
         return;
       }
       if (!afternoonLabel.trim()) {
-        Alert.alert('Label Required', 'Please specify a label for the afternoon shift.');
+        Alert.alert(
+          "Label Required",
+          "Please specify a label for the afternoon shift.",
+        );
         return;
       }
       if (!nightLabel.trim()) {
-        Alert.alert('Label Required', 'Please specify a label for the night shift.');
+        Alert.alert(
+          "Label Required",
+          "Please specify a label for the night shift.",
+        );
         return;
       }
       if (!customLabel.trim()) {
-        Alert.alert('Label Required', 'Please specify a label for the custom shift.');
+        Alert.alert(
+          "Label Required",
+          "Please specify a label for the custom shift.",
+        );
         return;
       }
 
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-      if (!timeRegex.test(morningStart) || !timeRegex.test(afternoonStart) || !timeRegex.test(nightStart)) {
-        Alert.alert('Invalid Time Format', 'Shift starts must be in HH:MM 24-hour format (e.g. 08:30 or 17:00).');
+      if (
+        !timeRegex.test(morningStart) ||
+        !timeRegex.test(afternoonStart) ||
+        !timeRegex.test(nightStart)
+      ) {
+        Alert.alert(
+          "Invalid Time Format",
+          "Shift starts must be in HH:MM 24-hour format (e.g. 08:30 or 17:00).",
+        );
         return;
       }
 
       if (isNaN(morningDur) || morningDur <= 0 || morningDur > 24) {
-        Alert.alert('Invalid Duration', 'Morning shift duration must be between 0 and 24 hours.');
+        Alert.alert(
+          "Invalid Duration",
+          "Morning shift duration must be between 0 and 24 hours.",
+        );
         return;
       }
       if (isNaN(afternoonDur) || afternoonDur <= 0 || afternoonDur > 24) {
-        Alert.alert('Invalid Duration', 'Afternoon shift duration must be between 0 and 24 hours.');
+        Alert.alert(
+          "Invalid Duration",
+          "Afternoon shift duration must be between 0 and 24 hours.",
+        );
         return;
       }
       if (isNaN(nightDur) || nightDur <= 0 || nightDur > 24) {
-        Alert.alert('Invalid Duration', 'Night shift duration must be between 0 and 24 hours.');
+        Alert.alert(
+          "Invalid Duration",
+          "Night shift duration must be between 0 and 24 hours.",
+        );
         return;
       }
 
@@ -175,7 +217,7 @@ export default function SetupScreen() {
       regularHourlyRate: reg,
       overtimeHourlyRate: ot,
       payPeriodLengthDays: len,
-      payPeriodStartDate: format(payPeriodStartDate, 'yyyy-MM-dd'),
+      payPeriodStartDate: format(payPeriodStartDate, "yyyy-MM-dd"),
       weekStartDay: ws as any,
       doublePayForPublicHolidays,
       morningShiftLabel: morningLabel.trim(),
@@ -191,12 +233,12 @@ export default function SetupScreen() {
     });
 
     setSetupComplete(true);
-    router.replace('/(tabs)');
+    router.replace("/(tabs)");
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-white"
     >
       <View
@@ -219,8 +261,8 @@ export default function SetupScreen() {
               <View
                 key={i}
                 className={`h-full flex-1 ${
-                  i <= step ? 'bg-blue-600' : 'bg-gray-100'
-                } ${i > 1 ? 'ml-1' : ''}`}
+                  i <= step ? "bg-blue-600" : "bg-gray-100"
+                } ${i > 1 ? "ml-1" : ""}`}
               />
             ))}
           </View>
@@ -239,7 +281,7 @@ export default function SetupScreen() {
                   <User size={40} color="#2563eb" />
                 </View>
                 <Text className="text-xl font-bold text-center text-gray-900">
-                  Welcome to Shift Tracker!
+                  Welcome to Shift Mate!
                 </Text>
                 <Text className="text-sm text-center text-gray-500 mt-2">
                   Let's configure the app to match your workplace setup.
@@ -273,14 +315,18 @@ export default function SetupScreen() {
               </TouchableOpacity>
 
               <View className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mt-4 flex-row">
-                <HelpCircle size={20} color="#d97706" className="shrink-0 mt-0.5" />
+                <HelpCircle
+                  size={20}
+                  color="#d97706"
+                  className="shrink-0 mt-0.5"
+                />
                 <View className="ml-3 flex-1">
                   <Text className="text-xs font-semibold text-amber-800">
                     Why is this needed?
                   </Text>
                   <Text className="text-xs text-amber-700 mt-1 leading-relaxed">
-                    We use your name in exported PDFs and invoices, and currency formats calculations
-                    across all summary boards.
+                    We use your name in exported PDFs and invoices, and currency
+                    formats calculations across all summary boards.
                   </Text>
                 </View>
               </View>
@@ -298,7 +344,8 @@ export default function SetupScreen() {
                   Pay Configurations
                 </Text>
                 <Text className="text-sm text-center text-gray-500 mt-2">
-                  Configure hourly rates and payroll structures in {selectedCurrencyInfo.code} ({selectedCurrencyInfo.symbol}).
+                  Configure hourly rates and payroll structures in{" "}
+                  {selectedCurrencyInfo.code} ({selectedCurrencyInfo.symbol}).
                 </Text>
               </View>
 
@@ -328,31 +375,33 @@ export default function SetupScreen() {
                   placeholder="14"
                 />
                 <View className="flex-1 mb-4">
-                  <Text className="mb-2 text-sm font-medium text-gray-700">Week Starts On</Text>
+                  <Text className="mb-2 text-sm font-medium text-gray-700">
+                    Week Starts On
+                  </Text>
                   <View className="flex-row rounded-xl border border-gray-200 overflow-hidden h-14 bg-gray-50">
                     <TouchableOpacity
-                      onPress={() => setWeekStartDay('0')}
+                      onPress={() => setWeekStartDay("0")}
                       className={`flex-1 items-center justify-center ${
-                        weekStartDay === '0' ? 'bg-blue-600' : ''
+                        weekStartDay === "0" ? "bg-blue-600" : ""
                       }`}
                     >
                       <Text
                         className={`text-sm font-bold ${
-                          weekStartDay === '0' ? 'text-white' : 'text-gray-600'
+                          weekStartDay === "0" ? "text-white" : "text-gray-600"
                         }`}
                       >
                         Sun
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      onPress={() => setWeekStartDay('1')}
+                      onPress={() => setWeekStartDay("1")}
                       className={`flex-1 items-center justify-center ${
-                        weekStartDay === '1' ? 'bg-blue-600' : ''
+                        weekStartDay === "1" ? "bg-blue-600" : ""
                       }`}
                     >
                       <Text
                         className={`text-sm font-bold ${
-                          weekStartDay === '1' ? 'text-white' : 'text-gray-600'
+                          weekStartDay === "1" ? "text-white" : "text-gray-600"
                         }`}
                       >
                         Mon
@@ -370,7 +419,7 @@ export default function SetupScreen() {
                 className="h-14 justify-center rounded-xl border border-gray-200 bg-gray-50 px-4"
               >
                 <Text className="text-base text-gray-900 font-semibold">
-                  {format(payPeriodStartDate, 'EEEE, MMM d, yyyy')}
+                  {format(payPeriodStartDate, "EEEE, MMM d, yyyy")}
                 </Text>
               </TouchableOpacity>
 
@@ -380,7 +429,7 @@ export default function SetupScreen() {
                   mode="date"
                   display="default"
                   onValueChange={(event, selectedDate) => {
-                    setShowDatePicker(Platform.OS === 'ios');
+                    setShowDatePicker(Platform.OS === "ios");
                     if (selectedDate) setPayPeriodStartDate(selectedDate);
                   }}
                 />
@@ -524,15 +573,20 @@ export default function SetupScreen() {
               </View>
 
               <View className="border border-gray-100 rounded-2xl p-5 bg-gray-50 mb-6">
-                <Text className="text-base font-bold text-gray-800 mb-3">Setup Summary</Text>
+                <Text className="text-base font-bold text-gray-800 mb-3">
+                  Setup Summary
+                </Text>
                 <View className="flex-row justify-between py-2 border-b border-gray-100">
                   <Text className="text-sm text-gray-500">Name</Text>
-                  <Text className="text-sm font-bold text-gray-900">{employeeName}</Text>
+                  <Text className="text-sm font-bold text-gray-900">
+                    {employeeName}
+                  </Text>
                 </View>
                 <View className="flex-row justify-between py-2 border-b border-gray-100">
                   <Text className="text-sm text-gray-500">Currency</Text>
                   <Text className="text-sm font-bold text-gray-900">
-                    {selectedCurrencyInfo.name} ({selectedCurrencyInfo.code} - {selectedCurrencyInfo.symbol})
+                    {selectedCurrencyInfo.name} ({selectedCurrencyInfo.code} -{" "}
+                    {selectedCurrencyInfo.symbol})
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-2 border-b border-gray-100">
@@ -557,10 +611,14 @@ export default function SetupScreen() {
                 </View>
               </View>
 
-              <Text className="mb-3 text-lg font-bold text-gray-900">Holiday Policy</Text>
+              <Text className="mb-3 text-lg font-bold text-gray-900">
+                Holiday Policy
+              </Text>
               <View className="flex-row items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
                 <View className="flex-1 pr-4">
-                  <Text className="font-semibold text-gray-900 text-sm">Double Pay for Holidays</Text>
+                  <Text className="font-semibold text-gray-900 text-sm">
+                    Double Pay for Holidays
+                  </Text>
                   <Text className="text-gray-500 text-xs mt-1">
                     Log hours worked on public holidays at 2x rate.
                   </Text>
@@ -568,8 +626,8 @@ export default function SetupScreen() {
                 <Switch
                   value={doublePayForPublicHolidays}
                   onValueChange={setDoublePayForPublicHolidays}
-                  trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
-                  thumbColor={'#ffffff'}
+                  trackColor={{ false: "#d1d5db", true: "#3b82f6" }}
+                  thumbColor={"#ffffff"}
                 />
               </View>
             </View>
@@ -584,7 +642,9 @@ export default function SetupScreen() {
               className="h-14 flex-row items-center justify-center rounded-xl bg-gray-100 px-6"
             >
               <ChevronLeft size={20} color="#1f2937" />
-              <Text className="ml-1 text-base font-bold text-gray-800">Back</Text>
+              <Text className="ml-1 text-base font-bold text-gray-800">
+                Back
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -593,7 +653,9 @@ export default function SetupScreen() {
               onPress={handleNext}
               className="h-14 flex-1 flex-row items-center justify-center rounded-xl bg-blue-600"
             >
-              <Text className="text-base font-bold text-white mr-1">Continue</Text>
+              <Text className="text-base font-bold text-white mr-1">
+                Continue
+              </Text>
               <ChevronRight size={20} color="#ffffff" />
             </TouchableOpacity>
           ) : (
@@ -601,7 +663,9 @@ export default function SetupScreen() {
               onPress={handleFinish}
               className="h-14 flex-1 flex-row items-center justify-center rounded-xl bg-blue-600"
             >
-              <Text className="text-base font-bold text-white mr-1">Complete Setup</Text>
+              <Text className="text-base font-bold text-white mr-1">
+                Complete Setup
+              </Text>
               <Check size={20} color="#ffffff" />
             </TouchableOpacity>
           )}
@@ -621,11 +685,13 @@ export default function SetupScreen() {
         >
           {/* Header */}
           <View className="px-6 py-4 flex-row items-center justify-between border-b border-gray-100">
-            <Text className="text-xl font-bold text-gray-900">Select Currency</Text>
+            <Text className="text-xl font-bold text-gray-900">
+              Select Currency
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 setShowCurrencyModal(false);
-                setCurrencySearch('');
+                setCurrencySearch("");
               }}
               className="px-3 py-1.5 bg-gray-100 rounded-full"
             >
@@ -657,21 +723,25 @@ export default function SetupScreen() {
                 onPress={() => {
                   setCurrency(item.code);
                   setShowCurrencyModal(false);
-                  setCurrencySearch('');
+                  setCurrencySearch("");
                 }}
                 className={`flex-row items-center justify-between py-4 border-b border-gray-100 ${
-                  currency === item.code ? 'bg-blue-50/50 px-2 rounded-xl border-b-0' : ''
+                  currency === item.code
+                    ? "bg-blue-50/50 px-2 rounded-xl border-b-0"
+                    : ""
                 }`}
               >
                 <View className="flex-1 pr-4">
                   <Text className="text-base font-semibold text-gray-900">
                     {item.name}
                   </Text>
-                  <Text className="text-xs text-gray-500 mt-0.5">{item.code}</Text>
+                  <Text className="text-xs text-gray-500 mt-0.5">
+                    {item.code}
+                  </Text>
                 </View>
                 <Text
                   className={`text-lg font-bold ${
-                    currency === item.code ? 'text-blue-600' : 'text-gray-400'
+                    currency === item.code ? "text-blue-600" : "text-gray-400"
                   }`}
                 >
                   {item.symbol}
@@ -680,7 +750,9 @@ export default function SetupScreen() {
             )}
             ListEmptyComponent={() => (
               <View className="items-center justify-center mt-20">
-                <Text className="text-gray-500">No currencies match your search.</Text>
+                <Text className="text-gray-500">
+                  No currencies match your search.
+                </Text>
               </View>
             )}
           />

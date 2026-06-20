@@ -20,11 +20,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import ViewShot from "react-native-view-shot";
 import { Button } from "../components/Button";
+import { ReportView } from "../components/ReportView";
 import { useShiftStore } from "../store/useShiftStore";
 import { calculatePeriodSummary, generatePDFHtml } from "../utils/calculations";
-import ViewShot from "react-native-view-shot";
-import { ReportView } from "../components/ReportView";
 
 export default function ExportScreen() {
   const { start, end } = useLocalSearchParams<{
@@ -104,7 +104,7 @@ export default function ExportScreen() {
       const filename = `ShiftTrack_Report_${safeStartDate}_to_${safeEndDate}.pdf`;
       const newFileDir = new FileSystem.Directory(
         FileSystem.Paths.document,
-        "shift-tracker",
+        "shift-mate",
       );
 
       if (!newFileDir.exists) {
@@ -171,7 +171,7 @@ export default function ExportScreen() {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const uri = await viewShotRef.current?.capture?.();
-      
+
       if (!uri) throw new Error("Failed to capture view");
 
       const safeStartDate = format(startDate, "MMM_dd_yyyy");
@@ -179,7 +179,7 @@ export default function ExportScreen() {
       const filename = `ShiftTrack_Report_${safeStartDate}_to_${safeEndDate}.jpg`;
       const newFileDir = new FileSystem.Directory(
         FileSystem.Paths.document,
-        "shift-tracker",
+        "shift-mate",
       );
 
       if (!newFileDir.exists) {

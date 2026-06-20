@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
-import { useShiftStore } from "../store/useShiftStore";
-import { View, ActivityIndicator, Text } from "react-native";
 import { Clock } from "lucide-react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import { useShiftStore } from "../store/useShiftStore";
 
 export default function Index() {
   const hasHydrated = useShiftStore((state) => state._hasHydrated);
@@ -16,7 +16,7 @@ export default function Index() {
             <Clock size={32} color="#2563eb" />
           </View>
           <Text className="text-lg font-bold text-gray-900 mb-2">
-            Loading Shift Tracker
+            Loading Shift Mate
           </Text>
           <ActivityIndicator size="small" color="#2563eb" />
         </View>

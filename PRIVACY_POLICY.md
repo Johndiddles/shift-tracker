@@ -1,16 +1,16 @@
-# Privacy Policy for Shift Tracker
+# Privacy Policy for Shift Mate
 
 **Last Updated:** June 16, 2026
 
-This Privacy Policy describes how Shift Tracker ("we," "us," or "our") collects, uses, stores, and handles your personal information when you use the Shift Tracker mobile application (the "App").
+This Privacy Policy describes how Shift Mate ("we," "us," or "our") collects, uses, stores, and handles your personal information when you use the Shift Mate mobile application (the "App").
 
-We are committed to protecting your privacy. Shift Tracker is built as a local-first utility. **We do not transmit your data over the internet, we do not run backend servers, and we do not share your information with third parties.** All your data remains strictly on your device.
+We are committed to protecting your privacy. Shift Mate is built as a local-first utility. **We do not transmit your data over the internet, we do not run backend servers, and we do not share your information with third parties.** All your data remains strictly on your device.
 
 ---
 
 ## 1. Information We Collect and Process
 
-Shift Tracker processes personal and work-related data to provide shift tracking and pay estimation features. All information listed below is entered manually by you and is stored locally on your device:
+Shift Mate processes personal and work-related data to provide shift tracking and pay estimation features. All information listed below is entered manually by you and is stored locally on your device:
 
 - **Employee Name:** An optional field used strictly to personalize your exported shift reports.
 - **Shift Details:** Shift dates, shift types (Morning, Afternoon, Night, or Custom), start and end times, hours worked, and any custom notes you choose to add to individual shift entries.
@@ -21,7 +21,7 @@ Shift Tracker processes personal and work-related data to provide shift tracking
 
 ## 2. How Your Data is Stored (Local Storage Only)
 
-Unlike cloud-based applications, Shift Tracker does not upload your personal data to remote servers.
+Unlike cloud-based applications, Shift Mate does not upload your personal data to remote servers.
 
 - **Storage Mechanism:** All your shifts, settings, and notes are saved locally on your device using encrypted/secure sandboxed storage (specifically `@react-native-async-storage/async-storage`).
 - **No Cloud Sync:** There is no automatic backup or cloud synchronization. Your data never leaves your device unless you choose to export it.
@@ -49,7 +49,7 @@ To enable specific features, the App may request the following permissions on yo
 
 ## 5. Third-Party Services and SDKs
 
-We prioritize a clean, tracking-free user experience. Shift Tracker:
+We prioritize a clean, tracking-free user experience. Shift Mate:
 
 - **Does NOT** use third-party analytics libraries (such as Firebase Analytics, Google Analytics, Mixpanel, or Amplitude).
 - **Does NOT** use third-party crash reporting tools (such as Sentry or Crashlytics) that collect device identifiers.
@@ -80,7 +80,7 @@ We may update this Privacy Policy from time to time. Any updates will be reflect
 
 ## 9. Contact Us
 
-If you have any questions or feedback regarding this Privacy Policy or the security of your data in Shift Tracker, please contact us at:
+If you have any questions or feedback regarding this Privacy Policy or the security of your data in Shift Mate, please contact us at:
 
 - **Email:** johnadepelumi@gmail.com
 - **Developer/Company Name:** John Diddles
